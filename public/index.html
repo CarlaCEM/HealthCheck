@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Verifica Saúde</title>
+    <style>
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background-color: #71f147;
+          padding: 2rem;
+          max-width: 800px;
+          margin: auto;
+        }
+
+        h1 {
+          color: #333;
+          text-align: center;
+          margin-bottom: 1rem;
+        }
+
+        input[type="text"] {
+          width: 100%;
+          padding: 0.75rem 1rem;
+          font-size: 1rem;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          box-sizing: border-box;
+          margin-bottom: 1.5rem;
+        }
+
+        .card {
+          background-color: white;
+          border-radius: 8px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+          padding: 1rem 1.5rem;
+          margin-bottom: 1rem;
+        }
+
+        .card h2 {
+          margin: 0;
+          font-size: 1.2rem;
+          color: #007BFF;
+        }
+
+        .card p {
+          margin: 0.25rem 0;
+          color: #555;
+        }
+
+        .no-results {
+          text-align: center;
+          color: #888;
+          font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<h1>Buscar por Bairro</h1>
+<input type="text" id="search" placeholder="Digite o nome do bairro" />
+<div id="results"><p class="no-results">Carregando dados...</p></div>
+
+<script>
+    let allData = [];
+
+    fetch('/api/local')
+      .then(res => {
+        if (!res.ok) throw new Error(`Erro na resposta: ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        allData = data;
+        document.getElementById('results').innerHTML = "<p class='no-results'>Digite um bairro para buscar...</p>";
+      })
+      .catch(err => {
+        console.error("Erro ao buscar os dados:", err);
+        document.getElementById('results').innerHTML = "<p class='no-results'>Erro ao carregar os dados</p>";
+      });
+
+    document.getElementById('search').addEventListener('input', function () {
+      const searchValue = this.value.toLowerCase();
+      const filtered = allData.filter(item =>
+        item.neighborhood && item.neighborhood.name.toLowerCase().includes(searchValue)
+      );
+
+      const container = document.getElementById('results');
+      container.innerHTML = '';
+
+      if (filtered.length > 0) {
+        filtered.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.innerHTML = `
+            <h2>${item.name}</h2>
+            <p><strong>Endereço:</strong> ${item.streetName}, nº ${item.numberAddress}</p>
+            <p><strong>Bairro:</strong> ${item.neighborhood.name}</p>
+            <p><strong>Telefone:</strong> ${item.phone}</p>
+          `;
+          container.appendChild(card);
+        });
+      } else {
+        container.innerHTML = "<p class='no-results'>Nenhum resultado encontrado.</p>";
+      }
+    });
+</script>
+</body>
+</html>
